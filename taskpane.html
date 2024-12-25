@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Categorization Tool</title>
+    <link rel="stylesheet" href="./taskpane.css">
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous"
+    />
+</head>
+
+<!--Start of the HTML code section.-->
+<body>
+
+
+<!-- Start the navbar -->
+<div class="navbar">
+    <!-- define the title -->
+    <div class="logo">Noiric</div>
+    <!-- Button that opens the dropdown for the various application settings. -->
+    <button class="navbar-settings" id="settingsButton" title="Settings">
+        <i class="fas fa-bars"></i>
+    </button>
+</div>
+
+        <!-- Dropdown Menu -->
+    <div id="dropdownMenu" class="dropdown">
+        <a href="#" id="dataClassification">Data Classification</a>
+        <a href="#" id="uniquenessModule">Uniqueness Module</a>
+        <a href="#" id="openFormatRequest">Open Format Request</a>
+        <a href="#" id="settingsLink">Settings</a>
+    </div>
+
+    <div id="content"></div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <span id="closeSettings" class="close">&times;</span>
+                <br>
+                <h2>Settings</h2>
+                <form id="settingsForm">
+                
+                    <input class="settingfield" type="text" id="apiKey" placeholder="Enter API Key" required>
+                    <button class="setting" type="submit">Save</button>
+                </form>
+            </div>
+        </div>
+
+
+
+<!-- Start the main section of the application. -->
+<div id="mainFormSection">
+    <h1>
+        Data Categorization Tool
+    </h1>
+    <br>
+    <form id="classificationForm">
+
+        <!--Item classification section-->
+        <div class="form-group">
+            <label for="inputRange" id="items">
+                Items to Classify:
+            </label>
+            <input type="text" id="inputRange" placeholder="Highlight range & click 'Select Range'">
+            <button type="button" id="selectRangeButton" class="select-button">
+               Select Range
+            </button>
+        </div>
+        
+
+        <!--Category selection section.-->
+        <div class="form-group">
+            <label for="categories" 
+            >Categories:</label>
+            <input type="text" id="categories" placeholder="Highlight range & click 'Select Categoires'">
+            <button type="button" id="selectCategoriesButton" class="select-button">
+                Select Categories
+            </button>  
+        </div>
+
+
+        <!--Additional instructions section.-->
+        <div class="form-group">
+            <label for="instructions" >
+                    Additional Instructions:</label>
+            <textarea id="instructions" placeholder="Enter any additional instructions"
+             rows="4" ></textarea>
+        </div>
+
+
+        <!--Additional settings section.-->
+        <div class="form-group">
+
+            <!-- Button that allows configuring the additional options. -->
+            <div id="toggleSettingsButton">
+                <span>Additional Settings</span>
+                <i id="toggleArrow" class="fas fa-chevron-down" ></i>
+            </div>
+        
+                <div id="additionalSettings" >
+
+                    <!-- Supplemental Categories options section. -->
+                    <div class="form-group">
+                        <select id="supplementalCategories" >
+                            <option value="">Supplemental categories</option>
+                            <option value="other">Other</option>
+                            <option value="unknown">Unknown</option>
+                            <option value="notapplicable">Not Applicable</option>
+                        </select>
+                    </div>
+                
+
+                    <!--Data return location selector.-->
+                    <div class="form-group">
+                        <label for="dataReturnCheckbox" id="locationTraining">Data Return Location:</label>
+                        <div class="switch-button-1">
+                            <input type="checkbox" class="switch-button-1-checkbox" id="dataReturnCheckbox">
+                            <label class="switch-button-1-label" for="dataReturnCheckbox">
+                                <span class="switch-button-1-label-span" >Same Sheet</span>
+                            </label>
+
+                            <label class="switch-button-1-label inactive" for="dataReturnCheckbox">
+                                <span class="switch-button-1-label-span">New Sheet</span>
+                            </label>
+                        </div>
+
+                    </div>
+
+
+                    <!--Rerun with training selector.-->
+                    <div class="form-group">
+                        <label for="rerunTrainingCheckbox" id="locationTraining">Rerun with Training:</label>
+                        <div class="switch-button-2">
+                            <input class="switch-button-2-checkbox" type="checkbox" id="rerunTrainingCheckbox">
+                            <label class="switch-button-2-label" for="rerunTrainingCheckbox">
+                                <span class="switch-button-2-label-span">No</span>
+                            </label>
+
+                            <label class="switch-button-2-label" for="rerunTrainingCheckbox">
+                                <span class="switch-button-2-label-span">Yes</span>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+        </div>
+
+        <!--Run Button-->
+        <div class="submit">
+            <button type="submit" id="runAnalysisButton">Run Analysis</button>
+            <div id="loader" class="loader"></div>
+        </div>
+        
+    </form>
+
+    <!--Error message in case of an issue somewhere in the application.-->
+    <div id="notification" >
+        <span id="notificationMessage"></span>
+    </div>
+</div>
+
+
+<!--Start of the section for scripts to handle dynamic events in the frontend within the application.-->
+<script src="./taskpane.js"></script>
+
+<!-- 
+This script handles the toggle of active/inactive states between two buttons. 
+It listens for click events on the two buttons, "sameSheetButton" and "newSheetButton". 
+When a button is clicked, the function 'toggleActive' is called, which adds the "active" class 
+to the clicked button and removes it from the other button, effectively switching the active state.
+-->
+<script>
+document.getElementById("sameSheetButton").addEventListener("click", function () {
+    toggleActive("sameSheetButton", "newSheetButton");
+});
+
+document.getElementById("newSheetButton").addEventListener("click", function () {
+    toggleActive("newSheetButton", "sameSheetButton");
+});
+
+function toggleActive(activeId, inactiveId) {
+    document.getElementById(activeId).classList.add("active");
+    document.getElementById(inactiveId).classList.remove("active");
+}
+</script>
+
+<!-- 
+This script handles the selection of two buttons: "noTraining" and "yesTraining". 
+When either button is clicked, it toggles between "active" and "inactive" states to visually indicate the selected option. 
+The "active" class is added to the selected button, while the "inactive" class is removed, and vice versa for the other button.
+-->
+<script>
+//Button selection.
+const noButton = document.getElementById("noTraining");
+const yesButton = document.getElementById("yesTraining");
+
+// Handle clicks.
+noButton.addEventListener("click", () => {
+    noButton.classList.add("active");
+    noButton.classList.remove("inactive");
+    yesButton.classList.remove("active");
+    yesButton.classList.add("inactive");
+});
+
+yesButton.addEventListener("click", () => {
+    yesButton.classList.add("active");
+    yesButton.classList.remove("inactive");
+    noButton.classList.remove("active");
+    noButton.classList.add("inactive");
+});
+</script>
+
+<!-- 
+This script handles the toggle functionality for displaying additional settings. 
+When the "toggleSettingsButton" is clicked, it checks if the "additionalSettings" section is currently visible. 
+If it is hidden, it makes the section visible and changes the arrow icon to indicate an "up" direction. 
+If the section is already visible, it hides it and changes the arrow icon to indicate a "down" direction.
+-->
+<script>
+document.getElementById("toggleSettingsButton").addEventListener("click", function () {
+    const additionalSettings = document.getElementById("additionalSettings");
+    const arrow = document.getElementById("toggleArrow");
+
+    if (additionalSettings.style.display === "none" || additionalSettings.style.display === "") {
+        additionalSettings.style.display = "block";
+        arrow.classList.remove("fa-chevron-down");
+        arrow.classList.add("fa-chevron-up");
+    } 
+    else {
+        additionalSettings.style.display = "none";
+        arrow.classList.remove("fa-chevron-up");
+        arrow.classList.add("fa-chevron-down");
+    }
+});
+</script>
+
+<!-- 
+This script handles the toggle functionality for expanding and collapsing the "additionalSettings" section. 
+When the "toggleSettingsButton" is clicked, it checks if the "additionalSettings" section has the "open" class. 
+If the section is open, it removes the "open" class and sets the max height to 0, effectively hiding the section. 
+If the section is closed, it adds the "open" class and adjusts the max height to the section's scroll height, making it visible.
+-->
+<script>
+document.getElementById('toggleSettingsButton').addEventListener('click', function() {
+    const additionalSettings = document.getElementById('additionalSettings');
+
+    if (additionalSettings.classList.contains('open')) {
+        additionalSettings.classList.remove('open');
+        additionalSettings.style.maxHeight = '0';
+    } 
+    else {
+        additionalSettings.classList.add('open');
+        additionalSettings.style.maxHeight = additionalSettings.scrollHeight + 'px';
+    }
+});
+</script>
+
+<!-- 
+This script manages the visibility of a dropdown menu and the opening/closing of a settings modal. 
+It listens for specific events and takes actions based on user interactions with the settings button, settings link, and modal close button.
+
+1. When the settings button is clicked, it toggles the visibility of the dropdown menu.
+2. When the settings link is clicked, it hides the dropdown menu and shows the settings modal.
+3. When the close button in the settings modal is clicked, it hides the settings modal.
+4. If the user clicks outside the settings button or dropdown menu, the dropdown menu is closed.
+-->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const settingsButton = document.getElementById("settingsButton");
+    const dropdownMenu = document.getElementById("dropdownMenu");
+    const settingsLink = document.getElementById("settingsLink");
+    const settingsModal = document.getElementById("settingsModal");
+    const closeSettings = document.getElementById("closeSettings");
+
+    // Toggle dropdown visibility when settings button is clicked
+    settingsButton.addEventListener("click", function() {
+        dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+    });
+
+    // Open settings modal when settings link is clicked
+    settingsLink.addEventListener("click", function(event) {
+        event.preventDefault();
+        dropdownMenu.style.display = "none";
+        settingsModal.style.display = "block";
+    });
+
+    // Close the settings modal
+    closeSettings.addEventListener("click", function() {
+        settingsModal.style.display = "none";
+    });
+
+    // Close dropdown if clicking outside
+    window.addEventListener("click", function(event) {
+        if (!settingsButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
+            dropdownMenu.style.display = "none";
+        }
+    });
+});
+</script>
+
+<!-- 
+This script handles the toggling of the visibility of the "settingsContent" submenu when the "settingsToggle" button is clicked.
+When the button is clicked, the script prevents the default behavior (e.g., preventing a link from redirecting) and checks whether the submenu is currently visible. 
+If the submenu is visible, it hides it; otherwise, it shows the submenu.
+-->
+<script>
+document.getElementById("settingsToggle").addEventListener("click", (event) => {
+    event.preventDefault(); // Prevent redirection by the link.
+    const settingsContent = document.getElementById("settingsContent");
+
+    // Show/Hide the submenu.
+    const isVisible = settingsContent.style.display === "block";
+    settingsContent.style.display = isVisible ? "none" : "block";
+});
+</script>
+
+<!-- 
+This script manages the toggling of the "active" class for a group of buttons with the class "switch-button-1-label".
+When a button is clicked, the "active" class is removed from all buttons in the group, and then the "active" class is added to the clicked button, visually highlighting it as active.
+-->
+<script>
+document.querySelectorAll('.switch-button-1-label').forEach((button) => {
+    button.addEventListener('click', () => {
+        document
+            .querySelectorAll('.switch-button-1-label')
+            .forEach((btn) => btn.classList.remove('active'));
+        button.classList.add('active');
+    });
+});
+</script>
+
+
+<!-- 
+This script manages the dynamic generation and display of content for a form interface. 
+It creates dynamic sections with titles, input fields, and buttons, and handles the transition effects when switching between sections.
+
+**Key Functionalities:**
+1. **Dynamic Content Generation:**
+   - The `generateDynamicContent` function creates a new content block with a title, input field, and "Run Analysis" button.
+   - The content is generated dynamically using JavaScript and replaces any existing content in the "content" container.
+   - The "Run Analysis" button changes color on hover and listens for clicks, but no action is assigned to it.
+
+2. **Dropdown Close:**
+   - The `closeDropdown` function hides the "dropdownMenu" to ensure clean navigation.
+
+3. **Section Click Handlers:**
+   - Clicking "Uniqueness Module" generates a form with a title and input field for uniqueness checks.
+   - Clicking "Open Format Request" generates a form for entering data related to format requests.
+   - Clicking "Data Classification" returns to the main form section, hiding any dynamically generated content.
+
+**Transition Effects:**
+- The main form and dynamic content fade in and out using `opacity` and `setTimeout` to create a smooth transition.
+
+**Detailed Explanation of Key Elements:**
+- **generateDynamicContent(titleText, placeholderText):**
+  - Hides the existing content (`mainFormSection`).
+  - Creates a container with a title (`h1`), input field (`input`), and a button (`Run Analysis`).
+  - Applies styles dynamically to each element (padding, font, colors, etc.).
+  - Button has hover effects (color change) and click event listeners.
+
+- **Event Listeners for Navigation:**
+  - The "Uniqueness Module" and "Open Format Request" links generate their respective forms.
+  - The "Data Classification" link returns to the main form section, restoring the previous layout.
+
+-->
+
+<script>
+ document.addEventListener('DOMContentLoaded', function () {
+    function generateDynamicContent(titleText, placeholderText) {
+        // Ocultar el contenido existente con un efecto de transición
+        const mainFormSection = document.getElementById('mainFormSection');
+        if (mainFormSection) {
+            mainFormSection.style.opacity = '0';
+            setTimeout(() => {
+                mainFormSection.style.display = 'none';
+            }, 300);
+        }
+
+        // Seleccionar el contenedor dinámico
+        const contentContainer = document.getElementById('content');
+        if (contentContainer) {
+            contentContainer.style.opacity = '0';
+            setTimeout(() => {
+                contentContainer.innerHTML = '';
+
+                const container = document.createElement('div');
+                container.style.padding = '15px 30px 15px 15px';
+                container.style.width = '100%';
+                container.style.margin = '11px ';
+
+                const title = document.createElement('h1');
+                title.textContent = titleText;
+                title.style.fontFamily = '"Aptos Serif", serif';
+                title.style.fontSize = '21px';
+                title.style.fontWeight = '700';
+                title.style.color = '#000000';
+                title.style.padding = '0';
+                title.style.margin = '8px 0 31px 0px';
+                title.style.display = 'flex';
+                title.style.textAlign = 'left';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = placeholderText;
+                input.style.width = '100%';
+                input.style.maxWidth = '100%';
+                input.style.height = '40px';
+                input.style.backgroundColor = '#d3d4d9';
+                input.style.border = 'none';
+                input.style.borderRadius = '3px';
+                input.style.fontFamily = '"Aptos Serif", serif';
+                input.style.fontSize = '15px';
+                input.style.fontWeight = '400';
+                input.style.color = 'rgba(0, 0, 0, 0.5)';
+                input.style.padding = '10px';
+                input.style.boxSizing = 'border-box';
+                input.style.marginBottom = '10px';
+                input.style.display = 'flex';
+
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.justifyContent = 'center';
+                buttonContainer.style.alignItems = 'center';
+                buttonContainer.style.marginTop = '10px';
+
+                const runAnalysisButton = document.createElement('button');
+                runAnalysisButton.textContent = 'Run Analysis';
+                runAnalysisButton.style.fontFamily = '"Aptos Serif", serif';
+                runAnalysisButton.style.width = '196px';
+                runAnalysisButton.style.height = '40px';
+                runAnalysisButton.style.backgroundColor = '#203b46';
+                runAnalysisButton.style.color = '#eef0f4'; 
+                runAnalysisButton.style.border = 'none';
+                runAnalysisButton.style.borderRadius = '3px';
+                runAnalysisButton.style.fontSize = '15px';
+                runAnalysisButton.style.fontWeight = '500';
+                runAnalysisButton.style.marginTop = '10px';
+                runAnalysisButton.style.cursor = 'pointer';
+                runAnalysisButton.style.boxShadow= 'box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);';
+                runAnalysisButton.style.transition = 'background-color 0.3s ease-in-out';
+
+                runAnalysisButton.addEventListener('mouseenter', function () {
+                    runAnalysisButton.style.backgroundColor = '#4b88a2'; 
+                });
+                runAnalysisButton.addEventListener('mouseleave', function () {
+                    runAnalysisButton.style.backgroundColor = '#203b46'; 
+                });
+
+                runAnalysisButton.addEventListener('click', function (event) {
+                    event.preventDefault(); // No hace nada
+                });
+
+                buttonContainer.appendChild(runAnalysisButton);
+
+                container.appendChild(title);
+                container.appendChild(input);
+                container.appendChild(buttonContainer);
+
+                contentContainer.appendChild(container);
+
+                contentContainer.style.opacity = '1';
+            }, 300);
+        }
+    }
+
+    function closeDropdown() {
+        const dropdownMenu = document.getElementById('dropdownMenu');
+        if (dropdownMenu) {
+            dropdownMenu.style.display = 'none';
+        }
+    }
+
+    document.getElementById('uniquenessModule').addEventListener('click', function (event) {
+        event.preventDefault();
+        closeDropdown(); 
+        generateDynamicContent('Uniqueness Module', 'Enter data for uniqueness check...');
+    });
+
+    document.getElementById('openFormatRequest').addEventListener('click', function (event) {
+        event.preventDefault();
+        closeDropdown(); 
+        generateDynamicContent('Open Format Request', 'Enter data for format request...');
+    });
+
+    document.getElementById('dataClassification').addEventListener('click', function (event) {
+        event.preventDefault();
+        closeDropdown();
+
+        const mainFormSection = document.getElementById('mainFormSection');
+        const contentContainer = document.getElementById('content');
+
+        if (contentContainer) {
+            contentContainer.style.opacity = '0';
+        }
+
+        setTimeout(() => {
+            if (mainFormSection) {
+                mainFormSection.style.display = 'block';
+                mainFormSection.style.opacity = '1';
+            }
+            if (contentContainer) {
+                contentContainer.innerHTML = ''; 
+            }
+        }, 300);
+    });
+});
+
+
+
+</script>
+
+
+</body>
+</html>
